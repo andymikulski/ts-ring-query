@@ -15,7 +15,7 @@ class Demo {
     this.canvas = document.createElement('canvas');
     this.ctx = this.canvas.getContext('2d');
     this.canvas.width = 800;
-    this.canvas.height = 600;
+    this.canvas.height = 800;
     document.body.appendChild(this.canvas);
 
 
@@ -23,6 +23,8 @@ class Demo {
     debugCanvas.width = this.canvas.width;
     debugCanvas.height = this.canvas.height;
     document.body.appendChild(debugCanvas);
+    debugCanvas.style.position = 'relative';
+    debugCanvas.style.top = '125px';
     this.debugCtx = debugCanvas.getContext('2d');
 
 
@@ -39,19 +41,20 @@ class Demo {
     // spawn entities in a circle
     let radius = 200;
     this.center = { x: this.canvas.width / 2, y: this.canvas.height / 2 };
-    for (let i = 0; i < 100; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const position = {
-        x: this.center.x + radius * Math.cos(angle),
-        y: this.center.y + radius * Math.sin(angle),
-      }
-      this.entities.push({
-        position,
-      });
-    }
+    // for (let i = 0; i < 100; i++) {
+    //   // const angle = Math.random() * Math.PI * 2;
+    //   const angle = i * Math.PI * 2 / 100;
+    //   const position = {
+    //     x: this.center.x + radius * Math.cos(angle),
+    //     y: this.center.y + radius * Math.sin(angle),
+    //   }
+    //   this.entities.push({
+    //     position,
+    //   });
+    // }
 
-    radius = 25;
-    for (let i = 0; i < 10; i++) {
+    // radius = 125;
+    for (let i = 0; i < 100; i++) {
       const angle = Math.random() * Math.PI * 2;
       const position = {
         x: this.center.x + radius * Math.cos(angle),
@@ -108,7 +111,6 @@ class Demo {
     });
 
     window.addEventListener('keydown', (e) => {
-      console.log('keydown', e.key);
       if (e.key === 'ArrowLeft') {
         this.ringSize.min -= 10;
       }
@@ -121,15 +123,19 @@ class Demo {
       if (e.key === 'ArrowDown') {
         this.ringSize.max -= 10;
       }
-      if (e.key == 'q'){
+      this.ringSize.max = Math.max(0, this.ringSize.max);
+      this.ringSize.min = Math.max(0, Math.min(this.ringSize.max, this.ringSize.min));
+      if (e.key.toLocaleLowerCase() == 'q') {
         this.sliceSize -= Math.PI / 16;
-      } else if (e.key == 'e'){
+      } else if (e.key.toLocaleLowerCase() == 'e') {
         this.sliceSize += Math.PI / 16;
       }
+      this.sliceSize = Math.max(0, Math.min(Math.PI * 2, this.sliceSize));
       this.render();
       this.runQuery();
     });
   }
+
 
   private runQuery = () => {
     const origin = { x: this.canvas.width / 2, y: this.canvas.height / 2 };
@@ -147,10 +153,9 @@ class Demo {
 
     this.ringQuery ||= new RingQuery(this.entities, origin);
 
-    console.time('query');
+    // console.time('query');
     const results = this.ringQuery.query(distanceMin, distanceMax, angleMin, angleMax); //this.query(distanceMin, angleMin, Math.abs(distanceMax - distanceMin), Math.abs(angleMax - angleMin));
-    console.timeEnd('query');
-    console.log('asdf', results.length);
+    // console.timeEnd('query');
     results.forEach((entity) => {
       // convert from polar to cartesian and draw
       const cartesian = this.polarToCartesian(entity.position);
@@ -188,7 +193,7 @@ class Demo {
 
   private render = () => {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    this.ctx.fillStyle = 'black';
+    this.ctx.fillStyle = 'rgb(200,200,200)';
     for (let entity of this.entities) {
       this.ctx.beginPath();
       this.ctx.arc(entity.position.x, entity.position.y, 5, 0, 2 * Math.PI);
