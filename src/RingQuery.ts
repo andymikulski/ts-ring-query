@@ -1,43 +1,19 @@
+import SpatialHash from "./SpatialHash";
 import { IEntity, Vector2Like } from "./main";
 
-
-class BoxQuery {
-  constructor(private entities: IEntity[] = []) { }
-
-  public insert(entity: IEntity) {
-    this.entities.push(entity);
-  }
-
-  public query(x: number, y: number, w: number = 0.1, h: number = 0.1) {
-    let result = [];
-    for (let entity of this.entities) {
-      if (entity.position.x >= x && entity.position.x <= x + w &&
-        entity.position.y >= y && entity.position.y <= y + h) {
-        result.push(entity);
-      }
-    }
-    return result;
-  }
-
-  public getAll() {
-    return this.entities;
-  }
-}
-
-
 export default class RingQuery {
-  private boxQuery: BoxQuery;
+  entityHash = new SpatialHash<IEntity>(25, Math.PI / 2);
+
   constructor(entities: IEntity[], private center: Vector2Like = { x: 0, y: 0 }) {
-    this.boxQuery = new BoxQuery([]);
     // convert entities to polar coordinates and
     entities.forEach((entity) => {
       const polar = this.cartesianToPolarFromOrigin(entity.position, center);
-      this.boxQuery.insert({
+      this.entityHash.insert({
         position: {
           x: polar.r,
           y: polar.theta,
         }
-      });
+      }, polar.r, polar.theta, 5, 5);
     });
   }
 
@@ -54,15 +30,11 @@ export default class RingQuery {
     return { r, theta };
   };
 
-
   private polarToCartesian = (polar: Vector2Like) => {
     const x = polar.x * Math.cos(polar.y);
     const y = polar.x * Math.sin(polar.y);
     return { x, y };
   };
-
-
-
 
   private convertNegativeRadianToWithin2Pi = (radian: number) => {
     while (radian < 0) {
@@ -76,6 +48,18 @@ export default class RingQuery {
       radian -= 2 * Math.PI;
     }
     return radian;
+  }
+
+  private queryImpl = (x: number, y: number, w: number, h: number) => {
+    const candidates = this.entityHash.query(x, y, w, h);
+    const results = [];
+    for (let i = 0; i < candidates.length; i++) {
+      const pos = candidates[i].position;
+      if (pos.x >= x && pos.x <= x + w && pos.y >= y && pos.y <= y + h) {
+        results.push(candidates[i]);
+      }
+    }
+    return results;
   }
 
   private lastQuery = [{
@@ -100,10 +84,10 @@ export default class RingQuery {
       angleEnd = this.convertRadianToWithin2Pi(angleEnd);
       // first point is from angleStart to 2pi
       const firstAngle = Math.abs(2 * Math.PI - angleStart);
-      const res1 = this.boxQuery.query(distanceStart, angleStart, Math.abs(distanceEnd - distanceStart), firstAngle);
+      const res1 = this.queryImpl(distanceStart, angleStart, Math.abs(distanceEnd - distanceStart), firstAngle);
 
       const remainingAngle = (Math.PI * 2) - Math.abs(angleStart - angleEnd) - firstAngle;
-      const res2 = this.boxQuery.query(distanceStart, 0, Math.abs(distanceEnd - distanceStart), remainingAngle);
+      const res2 = this.queryImpl(distanceStart, 0, Math.abs(distanceEnd - distanceStart), remainingAngle);
 
       this.lastQuery[0].x = distanceStart;
       this.lastQuery[0].y = angleStart;
@@ -127,7 +111,7 @@ export default class RingQuery {
     this.lastQuery[0].y = angleStart;
     this.lastQuery[0].w = Math.abs(distanceEnd - distanceStart);
     this.lastQuery[0].h = Math.abs(angleEnd - angleStart);
-    const res = this.boxQuery.query(distanceStart, angleStart, Math.abs(distanceEnd - distanceStart), Math.abs(angleEnd - angleStart));
+    const res = this.queryImpl(distanceStart, angleStart, Math.abs(distanceEnd - distanceStart), Math.abs(angleEnd - angleStart));
 
     return res;
   }
@@ -161,7 +145,7 @@ export default class RingQuery {
     debugCtx.restore();
 
 
-    this.boxQuery.getAll().forEach((entity) => {
+    this.entityHash.getAll().forEach((entity) => {
       debugCtx.beginPath();
       // convert Y from radians to degrees
       const y = entity.position.y * 180 / Math.PI;
@@ -176,30 +160,6 @@ export default class RingQuery {
     ctx.fillStyle = 'rgba(255,122,0,0.25)';
     ctx.fill();
     ctx.closePath();
-
-
-    // draw the "query ring" using the distance and angle variables
-    // ctx.beginPath();
-    // ctx.arc(this.center.x, this.center.y, distanceMin, angleMin, angleMax);
-    // ctx.strokeStyle = 'blue';
-    // ctx.stroke();
-    // ctx.closePath();
-    // ctx.beginPath();
-    // ctx.arc(this.center.x, this.center.y, distanceMax, angleMin, angleMax);
-    // ctx.strokeStyle = 'blue';
-    // ctx.stroke();
-    // ctx.closePath();
-
-    // // connect the two arcs with straight lines
-    // ctx.beginPath();
-    // ctx.moveTo(this.center.x + distanceMin * Math.cos(angleMin), this.center.y + distanceMin * Math.sin(angleMin));
-    // ctx.lineTo(this.center.x + distanceMax * Math.cos(angleMin), this.center.y + distanceMax * Math.sin(angleMin));
-    // ctx.moveTo(this.center.x + distanceMin * Math.cos(angleMax), this.center.y + distanceMin * Math.sin(angleMax));
-    // ctx.lineTo(this.center.x + distanceMax * Math.cos(angleMax), this.center.y + distanceMax * Math.sin(angleMax));
-    // ctx.strokeStyle = 'blue';
-    // ctx.stroke();
-    // ctx.closePath();
-
 
     // draw the query rect using this.lastQuery onto debugCtx
     this.lastQuery.forEach(d => {

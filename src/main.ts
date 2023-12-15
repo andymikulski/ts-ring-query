@@ -66,7 +66,7 @@ class Demo {
     }
 
     radius = 500;
-    for (let i = 0; i < 250; i++) {
+    for (let i = 0; i < 2050; i++) {
       const angle = Math.random() * Math.PI * 2;
       const position = {
         x: this.center.x + (Math.random() * radius) * Math.cos(angle),
