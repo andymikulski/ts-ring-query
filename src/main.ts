@@ -160,7 +160,7 @@ class Demo {
       // convert from polar to cartesian and draw
       const cartesian = this.polarToCartesian(entity.position);
       ctx.beginPath();
-      ctx.arc(this.center.x + cartesian.x, this.center.y + cartesian.y, 5, 0, 2 * Math.PI);
+      ctx.arc(this.center.x + cartesian.x, this.center.y + cartesian.y, 2, 0, 2 * Math.PI);
       ctx.fillStyle = 'blue';
       ctx.fill();
       ctx.closePath();
