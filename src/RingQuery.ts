@@ -30,6 +30,12 @@ export default class RingQuery {
     return { r, theta };
   };
 
+  private polarToCartesian = (polar: Vector2Like) => {
+    const x = polar.x * Math.cos(polar.y);
+    const y = polar.x * Math.sin(polar.y);
+    return { x, y };
+  };
+
   private convertNegativeRadianToWithin2Pi = (radian: number) => {
     while (radian < 0) {
       radian += 2 * Math.PI;
@@ -47,9 +53,8 @@ export default class RingQuery {
   private queryImpl = (x: number, y: number, w: number, h: number) => {
     const candidates = this.entityHash.query(x, y, w, h);
     const results = [];
-    let pos;
     for (let i = 0; i < candidates.length; i++) {
-      pos = candidates[i].position;
+      const pos = candidates[i].position;
       if (pos.x >= x && pos.x <= x + w && pos.y >= y && pos.y <= y + h) {
         results.push(candidates[i]);
       }
