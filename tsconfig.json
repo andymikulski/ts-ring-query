@@ -1,15 +1,17 @@
 {
   "compilerOptions": {
     "outDir": "./dist/",
+    "rootDir": "./src",
     "sourceMap": true,
+    "strict": false,
     "noImplicitAny": true,
     "module": "commonjs",
-    "target": "es5",
+    "target": "es2015",
     "declaration": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "lib": ["DOM", "ES2015", "ScriptHost"],
-    "downlevelIteration": true
+    "types": ["jasmine"]
   },
   "include": [
     "src/**/*"
