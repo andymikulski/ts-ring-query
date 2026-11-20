@@ -2,7 +2,7 @@ import SpatialHash from "./SpatialHash";
 import { IEntity, Vector2Like } from "./main";
 
 export default class RingQuery {
-  entityHash = new SpatialHash<IEntity>(25, Math.PI / 4);
+  entityHash = new SpatialHash<IEntity>(25, Math.PI / 2);
 
   constructor(entities: IEntity[], private center: Vector2Like = { x: 0, y: 0 }) {
     // convert entities to polar coordinates and
@@ -13,7 +13,7 @@ export default class RingQuery {
           x: polar.r,
           y: polar.theta,
         }
-      }, polar.r, polar.theta, 0.1, 0.01);
+      }, polar.r, polar.theta, 5, 5);
     });
   }
 
@@ -50,7 +50,9 @@ export default class RingQuery {
     let pos;
     for (let i = 0; i < candidates.length; i++) {
       pos = candidates[i].position;
+      if (pos.x >= x && pos.x <= x + w && pos.y >= y && pos.y <= y + h) {
         results.push(candidates[i]);
+      }
     }
     return results;
   }
