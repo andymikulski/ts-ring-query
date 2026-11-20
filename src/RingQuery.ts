@@ -8,12 +8,7 @@ export default class RingQuery {
     // convert entities to polar coordinates and
     entities.forEach((entity) => {
       const polar = this.cartesianToPolarFromOrigin(entity.position, center);
-      this.entityHash.insert({
-        position: {
-          x: polar.r,
-          y: polar.theta,
-        }
-      }, polar.r, polar.theta, 0.1, 0.01);
+      this.entityHash.insert(entity, polar.r, polar.theta, 0.1, 0.01);
     });
   }
 
@@ -141,7 +136,7 @@ export default class RingQuery {
     this.entityHash.getAll().forEach((entity) => {
       debugCtx.beginPath();
       // convert Y from radians to degrees
-      const y = entity.position.y * 180 / Math.PI;
+      const y = entity.position.y; // * 180 / Math.PI;
       debugCtx.arc(25 + entity.position.x, y, 5, 0, 2 * Math.PI);
       debugCtx.strokeStyle = 'green';
       debugCtx.stroke();
